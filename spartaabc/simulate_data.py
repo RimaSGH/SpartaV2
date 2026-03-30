@@ -41,11 +41,16 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, se
     sim_protocol.set_seed(seed)
     simulator = sf.Simulator(sim_protocol,simulation_type=sf.SIMULATION_TYPE.NOSUBS)
 
-    # simulated_msas = []
     sum_stats = []
     root_sampler = prior_sampler.sample_root_length()
     indel_rate_sampler = prior_sampler.sample_rates()
     length_distribution_sampler = prior_sampler.sample_length_distributions()
+
+    # Hoist imports and registry lookups outside the loop
+    from spartaabc.external_utils import get_unique_gap_lengths, compute_gap_density
+    from spartaabc.stat_registry import registry
+    import spartaabc.ext_stats  # ensure all stats are registered
+    extended_stat_names = registry.list_stats(enabled_only=True)
 
     logger.info("Starting msa simulation")
 
@@ -71,9 +76,17 @@ def simulate_data(prior_sampler: PriorSampler, num_sims: int, tree_path: str, se
                          insertion_length_dist, deletion_length_dist])
 
         sim_msa = simulator()
-        sim_stats = msastats.calculate_msa_stats(sim_msa.get_msa().splitlines())
+        msa_lines = sim_msa.get_msa().splitlines()
+        sim_stats = msastats.calculate_msa_stats(msa_lines)
 
-        sum_stats.append(numeric_params + sim_stats)
+        msa_sequences = [line for line in msa_lines if line and not line.startswith('>')]
+        gap_lengths = get_unique_gap_lengths(msa_sequences)
+        extended_stats_dict = registry.calculate_all(gap_lengths, enabled_only=True)
+        if 'GAP_DENSITY_RATIO' in extended_stats_dict:
+            extended_stats_dict['GAP_DENSITY_RATIO'] = compute_gap_density(msa_sequences)
+        extended_stats = [extended_stats_dict[name] for name in extended_stat_names]
+
+        sum_stats.append(numeric_params + sim_stats + extended_stats)
     logger.info(f"Done with {num_sims} msa simulations")
 
     return np.array(sum_stats)

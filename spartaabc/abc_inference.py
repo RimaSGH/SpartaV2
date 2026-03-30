@@ -128,6 +128,8 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", correction=
     params_df = pd.concat([parameters_and_stats[model][PARAMS_LIST] for model in  parameters_and_stats.keys()])
 
 
+    from spartaabc.stats_manager import calculate_all_extended_stats
+    
     if correction:
         logger.info(f"Correction enabled - realigning input MSA with {aligner}")
         sequence_aligner = Aligner(aligner)
@@ -136,6 +138,10 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", correction=
         realigned_sequences = [s[s.index("\n"):].replace("\n","") for s in realigned_msa_text.split(">")[1:]]
         empirical_stats = msastats.calculate_msa_stats(realigned_sequences)
         
+        # Add extended stats for empirical MSA
+        extended_empirical_stats = calculate_all_extended_stats(realigned_sequences, enabled_only=True)
+        empirical_stats = empirical_stats + extended_empirical_stats
+        
         stats_df, kept_statistics_indices = correct_and_merge_models_data(main_path, aligner,
                                                                           kept_statistics_indices,
                                                                           parameters_and_stats)
@@ -143,6 +149,14 @@ def run(main_path: Path, aligner: str, distance_metric: str="mahal", correction=
     else:
         stats_df = pd.concat([parameters_and_stats[model][SUMSTATS_LIST_SUBSET] for model in  parameters_and_stats.keys()])
         empirical_stats = msastats.calculate_fasta_stats(MSA_PATH)
+        
+        # For FASTA, need to read sequences to calculate extended stats
+        # Read FASTA file to get sequences
+        with open(MSA_PATH, 'r') as f:
+            fasta_content = f.read()
+        fasta_sequences = [s[s.index("\n"):].replace("\n","") for s in fasta_content.split(">")[1:]]
+        extended_empirical_stats = calculate_all_extended_stats(fasta_sequences, enabled_only=True)
+        empirical_stats = empirical_stats + extended_empirical_stats
 
     empirical_stats = [empirical_stats[i] for i in kept_statistics_indices]
 

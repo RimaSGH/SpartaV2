@@ -64,8 +64,10 @@ def check_dependencies():
 
 def get_tree_path(main_path: Path) -> str:
     tree_path = None
-    if len( n := list(main_path.glob("*.tree")) + list(main_path.glob("*.newick"))) == 1:
-        tree_path = str(n[0])
+    candidates = [f for f in list(main_path.glob("*.tree")) + list(main_path.glob("*.newick"))
+                  if not f.name.startswith("._")]
+    if len(candidates) >= 1:
+        tree_path = str(candidates[0])
 
     if tree_path is None:
         print("no tree file")
@@ -75,8 +77,9 @@ def get_tree_path(main_path: Path) -> str:
 
 def get_msa_path(main_path: Path) -> str:
     msa_path = None
-    if len( n := list(main_path.glob("*.fasta"))) == 1:
-        msa_path = str(n[0])
+    candidates = [f for f in main_path.glob("*.fasta") if not f.name.startswith("._")]
+    if len(candidates) >= 1:
+        msa_path = str(candidates[0])
 
     if msa_path is None:
         print("no fasta file")
@@ -133,7 +136,20 @@ PARAMS_LIST = [
     "length_param_deletion"
 ]
 
-SUMSTATS_LIST = [f'SS_{i}' for i in range(0,27)]
+# Base stats (from MSAStats C++) - always 27
+BASE_STATS_COUNT = 27
+BASE_SUMSTATS_LIST = [f'SS_{i}' for i in range(0, BASE_STATS_COUNT)]
+
+# Extended stats (from new modular registry system)
+from spartaabc import ext_stats  # Import to register all stats
+from spartaabc.stat_registry import registry
+EXTENDED_STAT_NAMES = registry.list_stats(enabled_only=True)
+EXTENDED_STATS_COUNT = len(EXTENDED_STAT_NAMES)
+
+# Combined stats list
+SUMSTATS_LIST = BASE_SUMSTATS_LIST + [f'SS_{i}' for i in range(BASE_STATS_COUNT, BASE_STATS_COUNT + EXTENDED_STATS_COUNT)]
+
+# Base stats definitions
 SUMSTATS_DEFINITION = {
     'SS_0': "AVG_GAP_SIZE",
     'SS_1': "MSA_LEN",
@@ -163,6 +179,10 @@ SUMSTATS_DEFINITION = {
     'SS_25': "MSA_POSITION_WITH_2_GAPS",
     'SS_26': "MSA_POSITION_WITH_N_MINUS_1_GAPS"
 }
+
+# Add extended stats definitions dynamically
+for i, name in enumerate(EXTENDED_STAT_NAMES):
+    SUMSTATS_DEFINITION[f'SS_{BASE_STATS_COUNT + i}'] = name
 
 
 
