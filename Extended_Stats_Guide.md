@@ -32,21 +32,17 @@ The `-s` flag passed to `sparta-abc` lists statistics to **exclude**.
 This lets you test any combination without re-running simulations.
 
 ```bash
-# Use all 36 statistics (default — no -s flag)
+# Default: use all 36 statistics
 sparta-abc -i <input_dir> -noc
 
-# Use only the 9 new statistics (exclude all 27 C++ base stats)
-sparta-abc -i <input_dir> -noc -s SS_0 SS_1 SS_2 SS_3 SS_4 SS_5 SS_6 SS_7 SS_8 SS_9 \
-    SS_10 SS_11 SS_12 SS_13 SS_14 SS_15 SS_16 SS_17 SS_18 SS_19 \
-    SS_20 SS_21 SS_22 SS_23 SS_24 SS_25 SS_26
-
-# Use only Q25 + Q50 + Q75 (best combination found in benchmarks)
-sparta-abc -i <input_dir> -noc -s SS_0 SS_1 SS_2 SS_3 SS_4 SS_5 SS_6 SS_7 SS_8 SS_9 \
-    SS_10 SS_11 SS_12 SS_13 SS_14 SS_15 SS_16 SS_17 SS_18 SS_19 \
-    SS_20 SS_21 SS_22 SS_23 SS_24 SS_25 SS_26 SS_30 SS_31 SS_32 SS_33 SS_34 SS_35
-
-# Exclude only GAP_CV (SS_32) — known to hurt inference
+# Exclude GAP_CV (known to hurt inference)
 sparta-abc -i <input_dir> -noc -s SS_32
+
+# Use only Q25 + Q50 + Q75 (best combination from benchmarks)
+sparta-abc -i <input_dir> -noc \
+    -s SS_0 SS_1 SS_2 SS_3 SS_4 SS_5 SS_6 SS_7 SS_8 SS_9 \
+    -s SS_10 SS_11 SS_12 SS_13 SS_14 SS_15 SS_16 SS_17 SS_18 SS_19 \
+    -s SS_20 SS_21 SS_22 SS_23 SS_24 SS_25 SS_26 SS_30 SS_31 SS_32 SS_33 SS_34 SS_35
 ```
 
 ---
