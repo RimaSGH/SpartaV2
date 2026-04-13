@@ -35,10 +35,10 @@ This lets you test any combination without re-running simulations.
 # Default: use all 36 statistics
 sparta-abc -i <input_dir> -noc
 
-# Exclude GAP_CV (known to hurt inference)
+# Exclude GAP_CV 
 sparta-abc -i <input_dir> -noc -s SS_32
 
-# Use only Q25 + Q50 + Q75 (best combination from benchmarks)
+# Use only Q25 + Q50 + Q75 
 sparta-abc -i <input_dir> -noc \
     -s SS_0 SS_1 SS_2 SS_3 SS_4 SS_5 SS_6 SS_7 SS_8 SS_9 \
     -s SS_10 SS_11 SS_12 SS_13 SS_14 SS_15 SS_16 SS_17 SS_18 SS_19 \
